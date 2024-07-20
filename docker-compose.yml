@@ -14,17 +14,21 @@ services:
     ports:
       - ${DOCKER_DB_EXTERNAL_PORT:-3306}:3306
     environment:
-      - MYSQL_ROOT_PASSWORD=${DOCKER_DB_ROOT_PASSWORD:-password}
+      MYSQL_ROOT_PASSWORD_SECRET_FILE: /run/secrets/docker_db_root_password
     volumes:
       - type: volume
         source: ac-database
         target: /var/lib/mysql
+      - ./apps/docker/read_secrets.sh:/usr/local/bin/read_secrets.sh
+    entrypoint: /usr/local/bin/read_secrets.sh mysqld
     restart: unless-stopped
     healthcheck:
-      test: "/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute \"SHOW DATABASES;\""
+      test: "source /usr/local/bin/read_secrets.sh; /usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute \"SHOW DATABASES;\""
       interval: 5s
       timeout: 10s
       retries: 40
+    secrets:
+      - docker_db_root_password
 
   ac-db-import:
     container_name: ac-db-import
@@ -42,9 +46,9 @@ services:
     environment:
       AC_DATA_DIR: "/azerothcore/env/dist/data"
       AC_LOGS_DIR: "/azerothcore/env/dist/logs"
-      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_auth"
-      AC_WORLD_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_world"
-      AC_CHARACTER_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_characters"
+      AC_LOGIN_DATABASE_INFO_SECRET_FILE: /run/secrets/docker_db_dsn_auth
+      AC_WORLD_DATABASE_INFO_SECRET_FILE: /run/secrets/docker_db_dsn_world
+      AC_CHARACTER_DATABASE_INFO_SECRET_FILE: /run/secrets/docker_db_dsn_characters
     volumes:
       - ${DOCKER_VOL_ETC:-./env/dist/etc}:/azerothcore/env/dist/etc
       # [osxfs optimization]: https://stackoverflow.com/a/63437557/1964544
@@ -52,6 +56,10 @@ services:
     depends_on:
       ac-database:
         condition: service_healthy
+    secrets:
+      - docker_db_dsn_auth
+      - docker_db_dsn_world
+      - docker_db_dsn_characters
 
   ac-worldserver:
     container_name: ac-worldserver
@@ -76,10 +84,10 @@ services:
     environment:
       AC_DATA_DIR: "/azerothcore/env/dist/data"
       AC_LOGS_DIR: "/azerothcore/env/dist/logs"
-      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_auth"
-      AC_WORLD_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_world"
-      AC_CHARACTER_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_characters"
-      AC_PLAYERBOTS_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_playerbots"
+      AC_LOGIN_DATABASE_INFO_SECRET_FILE: /run/secrets/docker_db_dsn_auth
+      AC_WORLD_DATABASE_INFO_SECRET_FILE: /run/secrets/docker_db_dsn_world
+      AC_CHARACTER_DATABASE_INFO_SECRET_FILE: /run/secrets/docker_db_dsn_characters
+      AC_PLAYERBOTS_DATABASE_INFO_SECRET_FILE: /run/secrets/docker_db_dsn_playerbots
     ports:
       - ${DOCKER_WORLD_EXTERNAL_PORT:-8085}:8085
       - ${DOCKER_SOAP_EXTERNAL_PORT:-7878}:7878
@@ -89,6 +97,8 @@ services:
       - ${DOCKER_VOL_LOGS:-./env/dist/logs}:/azerothcore/env/dist/logs:delegated
       # client data
       - ${DOCKER_VOL_DATA:-ac-client-data}:/azerothcore/env/dist/data/:ro
+      # module data
+      - ${DOCKER_VOL_MOD_PLAYERBOT:-./modules/mod-playerbots}:/azerothcore/modules/mod-playerbots
     depends_on:
       ac-database:
         condition: service_healthy
@@ -96,6 +106,11 @@ services:
         condition: service_completed_successfully
       ac-client-data-init:
         condition: service_completed_successfully
+    secrets:
+      - docker_db_dsn_auth
+      - docker_db_dsn_world
+      - docker_db_dsn_characters
+      - docker_db_dsn_playerbots
 
   ac-authserver:
     container_name: ac-authserver
@@ -119,7 +134,7 @@ services:
     environment:
       AC_LOGS_DIR: "/azerothcore/env/dist/logs"
       AC_TEMP_DIR: "/azerothcore/env/dist/temp"
-      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_auth"
+      AC_LOGIN_DATABASE_INFO_SECRET_FILE: /run/secrets/docker_db_dsn_auth
     volumes:
       - ${DOCKER_VOL_ETC:-./env/dist/etc}:/azerothcore/env/dist/etc
       # [osxfs optimization]: https://stackoverflow.com/a/63437557/1964544
@@ -131,6 +146,10 @@ services:
         condition: service_healthy
       ac-db-import:
         condition: service_completed_successfully
+    secrets:
+      - docker_db_dsn_auth
+      - docker_db_dsn_world
+      - docker_db_dsn_characters
 
   ac-client-data-init:
     container_name: ac-client-data-init
@@ -190,9 +209,14 @@ services:
     environment:
       AC_DATA_DIR: "/azerothcore/env/dist/data"
       AC_LOGS_DIR: "/azerothcore/env/dist/logs"
-      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_auth"
-      AC_WORLD_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_world"
-      AC_CHARACTER_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_characters"
+      AC_LOGIN_DATABASE_INFO_SECRET_FILE: /run/secrets/docker_db_dsn_auth
+      AC_WORLD_DATABASE_INFO_SECRET_FILE:  /run/secrets/docker_db_dsn_world
+      AC_CHARACTER_DATABASE_INFO_SECRET_FILE:  /run/secrets/docker_db_dsn_characters
+    secrets:
+      - docker_db_dsn_auth
+      - docker_db_dsn_world
+      - docker_db_dsn_characters
+      - docker_db_dsn_playerbots
     ports:
       - ${DOCKER_AUTH_EXTERNAL_PORT:-3724}:3724
       - ${DOCKER_WORLD_EXTERNAL_PORT:-8085}:8085
@@ -209,6 +233,18 @@ services:
     depends_on:
       ac-database:
         condition: service_healthy
+
+secrets:
+  docker_db_root_password:
+    file: /etc/azerothcore/secrets/db_pass
+  docker_db_dsn_auth:
+    file: /etc/azerothcore/secrets/db_dsn_auth
+  docker_db_dsn_world:
+    file: /etc/azerothcore/secrets/db_dsn_world
+  docker_db_dsn_characters:
+    file: /etc/azerothcore/secrets/db_dsn_characters
+  docker_db_dsn_playerbots:
+    file: /etc/azerothcore/secrets/db_dsn_playerbots
 
 volumes:
   ac-database:
