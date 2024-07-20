@@ -66,6 +66,8 @@ services:
         DOCKER_USER: ${DOCKER_USER:-acore}
     networks:
       - ac-network
+    ipc: service:ac-authserver
+    pid: service:ac-authserver
     stdin_open: true
     tty: true
     restart: unless-stopped
@@ -108,6 +110,8 @@ services:
         DOCKER_USER: ${DOCKER_USER:-acore}
     networks:
       - ac-network
+    ipc: shareable
+    pid: shareable
     tty: true
     restart: unless-stopped
     env_file:

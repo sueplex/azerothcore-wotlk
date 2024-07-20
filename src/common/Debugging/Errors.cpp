@@ -154,6 +154,14 @@ void Acore::AbortHandler(int sigval)
     Crash(formattedMessage.c_str());
 }
 
+void Acore::HangupHandler(int sigval)
+{
+    // nothing useful to log here, no way to pass args
+    std::string formattedMessage = StringFormatFmt("Caught signal {}\n", sigval);
+    fmt::print(stderr, "{}", formattedMessage);
+    fflush(stderr);
+}
+
 std::string GetDebugInfo()
 {
     return "";
