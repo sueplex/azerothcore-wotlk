@@ -234,6 +234,42 @@ services:
       ac-database:
         condition: service_healthy
 
+  ac-wowmgr:
+    image: wowmgr:${DOCKER_IMAGE_TAG:-master}
+    build:
+      context: /usr/local/wowmgr/
+      dockerfile: /usr/local/wowmgr/Dockerfile
+      args:
+        USER_ID: ${DOCKER_USER_ID:-1000}
+        GROUP_ID: ${DOCKER_GROUP_ID:-1000}
+        DOCKER_USER: ${DOCKER_USER:-acore}
+    environment:
+      SQLALCHEMY_DSN_SECRET_FILE:  /run/secrets/sqlalchemy_dsn
+    secrets:
+      - sqlalchemy_dsn
+    networks:
+      - ac-network
+    ports:
+      - ${DOCKER_MANAGER_PORT:-3000}:3000
+    volumes:
+      - ${DOCKER_BIG_STATIC_DIR:-/usr/local/static/}:/wowmgr/static/big/
+    depends_on:
+      ac-database:
+        condition: service_healthy
+  ac-caddy:
+    image: caddy:2.8.4-alpine
+    volumes:
+      - /etc/caddy:/caddy
+      - /etc/caddy/data:/data
+    networks:
+      - ac-network
+    ports:
+      - 80:80
+      - 443:443
+    cap_add:
+      - NET_ADMIN
+    command: caddy run -c /caddy/Caddyfile
+
 secrets:
   docker_db_root_password:
     file: /etc/azerothcore/secrets/db_pass
@@ -245,6 +281,8 @@ secrets:
     file: /etc/azerothcore/secrets/db_dsn_characters
   docker_db_dsn_playerbots:
     file: /etc/azerothcore/secrets/db_dsn_playerbots
+  sqlalchemy_dsn:
+    file: /etc/azerothcore/secrets/sqlalchemy_dsn
 
 volumes:
   ac-database:

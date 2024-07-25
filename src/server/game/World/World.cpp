@@ -2756,15 +2756,6 @@ void World::_UpdateGameTime()
             ShutdownMsg();
         }
     }
-    else
-    {
-        ///- If there's no shutdown timer if the server is inactive and set an idle
-        ///  shutdown timer
-        Seconds uptime = GetEpochTime() - GameTime::GetStartTime();
-        if (elapsed > 0s && (uptime > 300s) && GetActiveAndQueuedSessionCount() == 0) {
-            sWorld->ShutdownServ(600, SHUTDOWN_MASK_IDLE, SHUTDOWN_EXIT_CODE, "server idle");
-        }
-    }
 }
 
 /// Shutdown the server
