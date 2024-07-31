@@ -60,6 +60,17 @@ void PlayerbotsDatabaseConnection::DoPrepareStatements()
     PrepareStatement(PLAYERBOTS_DEL_RANDOM_BOTS_BY_OWNER_AND_EVENT, "DELETE FROM playerbots_random_bots WHERE owner = ? AND bot = ? AND event = ?", CONNECTION_ASYNC);
     PrepareStatement(PLAYERBOTS_UPD_RANDOM_BOTS, "UPDATE playerbots_random_bots SET validIn = ? WHERE event = ? AND bot = ?", CONNECTION_ASYNC);
 
+    PrepareStatement(PLAYERBOTS_SEL_PVP_BOTS_VALUE, "SELECT value FROM playerbots_pvp_bots WHERE event = ?", CONNECTION_SYNCH);
+    PrepareStatement(PLAYERBOTS_SEL_PVP_BOTS_BOT, "SELECT `bot` FROM playerbots_pvp_bots WHERE event = ?", CONNECTION_SYNCH);
+    PrepareStatement(PLAYERBOTS_SEL_PVP_BOTS_BY_OWNER_AND_EVENT, "SELECT bot FROM playerbots_pvp_bots WHERE owner = ? AND event = ?", CONNECTION_SYNCH);
+    PrepareStatement(PLAYERBOTS_SEL_PVP_BOTS_BY_OWNER_AND_BOT, "SELECT `event`, `value`, `time`, validIn, `data` FROM playerbots_pvp_bots WHERE owner = ? AND bot = ?", CONNECTION_SYNCH);
+    PrepareStatement(PLAYERBOTS_SEL_PVP_BOTS_BY_EVENT_AND_VALUE, "SELECT bot FROM playerbots_pvp_bots WHERE event = ? AND value = ?", CONNECTION_SYNCH);
+    PrepareStatement(PLAYERBOTS_INS_PVP_BOTS, "INSERT INTO playerbots_pvp_bots (owner, bot, `time`, validIn, event, `value`, `data`) VALUES (?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
+    PrepareStatement(PLAYERBOTS_DEL_PVP_BOTS, "DELETE FROM playerbots_pvp_bots", CONNECTION_ASYNC);
+    PrepareStatement(PLAYERBOTS_DEL_PVP_BOTS_BY_OWNER, "DELETE FROM playerbots_pvp_bots WHERE owner = ? AND bot = ?", CONNECTION_ASYNC);
+    PrepareStatement(PLAYERBOTS_DEL_PVP_BOTS_BY_OWNER_AND_EVENT, "DELETE FROM playerbots_pvp_bots WHERE owner = ? AND bot = ? AND event = ?", CONNECTION_ASYNC);
+    PrepareStatement(PLAYERBOTS_UPD_PVP_BOTS, "UPDATE playerbots_pvp_bots SET validIn = ? WHERE event = ? AND bot = ?", CONNECTION_ASYNC);
+
     PrepareStatement(PLAYERBOTS_SEL_RARITY_CACHE, "SELECT item, rarity FROM playerbots_rarity_cache", CONNECTION_SYNCH);
     PrepareStatement(PLAYERBOTS_INS_RARITY_CACHE, "INSERT INTO playerbots_rarity_cache (item, rarity) VALUES (?, ?)", CONNECTION_ASYNC);
 
