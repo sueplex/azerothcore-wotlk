@@ -49,6 +49,20 @@ else
     touch "$CONF"
 fi
 
-echo "Starting $ACORE_COMPONENT..."
+echo "$ACORE_COMPONENT Ready..."
 
+binpath=$(echo $@ | awk '{print $NF}')
+binname=$(basename $binpath)
+pidfile="./env/dist/etc/$binname.pid"
+touch $pidfile
+printf "$$" > "$pidfile"
+
+if [[ "$binname" == "worldserver" ]]; then
+    pause=1
+    trap 'pause=0 && rm $pidfile' SIGHUP
+    while (( pause )); do sleep 2; done
+fi
+
+echo "Starting $ACORE_COMPONENT..."
 exec "$@"
+

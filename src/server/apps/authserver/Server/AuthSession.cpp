@@ -32,6 +32,11 @@
 #include "TOTP.h"
 #include "Util.h"
 #include <boost/lexical_cast.hpp>
+#include <iostream>
+#include <fstream>
+#include <ios>
+#include <stdlib.h>
+#include <signal.h>
 
 using boost::asio::ip::tcp;
 
@@ -727,6 +732,21 @@ bool AuthSession::HandleReconnectProof()
 bool AuthSession::HandleRealmList()
 {
     LOG_DEBUG("server.authserver", "Entering _HandleRealmList");
+
+    // If there is a pidfile for the worldserver, it is waiting, trigger the
+    // server to start with a sighup
+    std::ifstream in("/azerothcore/env/dist/etc/worldserver.pid", std::ios_base::in);
+    if (in.is_open()) {
+        std::string pid;
+        in.seekg(0, std::ios::end);
+        pid.resize(in.tellg());
+        in.seekg(0, std::ios::beg);
+        in.read(&pid[0], pid.size());
+        in.close();
+        int pidn = std::atoi(pid.c_str());
+        std::cout << "starting server: " << pidn << "\n";
+        kill(pidn, 1);
+    }
 
     LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_REALM_CHARACTER_COUNTS);
     stmt->SetData(0, _accountInfo.Id);

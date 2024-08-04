@@ -49,6 +49,7 @@ namespace Acore
     AC_COMMON_API void Warning(std::string_view file, uint32 line, std::string_view function, std::string_view message);
 
     [[noreturn]] AC_COMMON_API void AbortHandler(int sigval);
+    [[noreturn]] AC_COMMON_API void HangupHandler(int sigval);
 
 } // namespace Acore
 
